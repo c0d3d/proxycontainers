@@ -78,7 +78,7 @@ in {
       }) withIps) // {
         home = {
           hostName = "nix.kylesferrazza.com";
-          documentRoot = ./default;
+          documentRoot = "${pkgs.writeTextDir "home/index.html" (readFile ./index.html)}/home/";
           onlySSL = true;
           inherit (cfg) sslServerCert sslServerChain sslServerKey;
         };
