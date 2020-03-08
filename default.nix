@@ -32,6 +32,10 @@ in {
         type = types.bool;
         default = false;
       };
+      acceptTOS = mkOption {
+        type = types.bool;
+        default = false; # Just to force people to enable
+      };
       adminAddr = mkOption {
         type = types.str;
       };
@@ -45,6 +49,14 @@ in {
       forceSSLRoot = mkOption {
         type = types.bool;
         default = true;
+      };
+      recommendedTlsSettings = mkOption {
+        type = types.bool;
+        default = true;
+      };
+      hsts = mkOption {
+        type = types.str;
+        default = "add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;";
       };
       sslCertificateRoot = mkOption {
         type = types.nullOr types.path;
@@ -101,11 +113,12 @@ in {
   (let
     withIps = addIps cfg.containers;
   in {
-    security.acme.acceptTerms = cfg.enableACMERoot;
+    security.acme.acceptTerms = cfg.acceptTOS;
     security.acme.email = cfg.adminAddr;
     containers = mapAttrs' makeContainerDef withIps;
     services.nginx = {
       enable = true;
+      recommendedTlsSettings = cfg.recommendedTlsSettings;
       virtualHosts = (mapAttrs (name: value: {
         serverName = name;
         enableACME = value.enableACME;
@@ -120,6 +133,7 @@ in {
                                 then value.sslServerChain
                                 else "/var/lib/acme/default/full.pem";
         extraConfig = ''
+          ${cfg.hsts}
           proxy_set_header X-Forwarded-Host $host:$server_port;
           proxy_set_header X-Forwarded-Server $host;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
