@@ -50,7 +50,15 @@ in {
         type = types.bool;
         default = true;
       };
+      recommendedOptimisation = mkOption {
+        type = types.bool;
+        default = true;
+      };
       recommendedTlsSettings = mkOption {
+        type = types.bool;
+        default = true;
+      };
+      recommendedGzipSettings = mkOption {
         type = types.bool;
         default = true;
       };
@@ -119,6 +127,8 @@ in {
     services.nginx = {
       enable = true;
       recommendedTlsSettings = cfg.recommendedTlsSettings;
+      recommendedOptimisation = cfg.recommendedOptimisation;
+      recommendedGzipSettings = cfg.recommendedGzipSettings;
       virtualHosts = (mapAttrs (name: value: {
         serverName = name;
         enableACME = value.enableACME;
@@ -142,23 +152,8 @@ in {
           }
         '';
       }) withIps) // {
-        home = {
-          serverName = cfg.rootDomain;
-          root = "${pkgs.writeTextDir "home/index.html" (readFile ./index.html)}/home/";
-          enableACME = cfg.enableACMERoot;
-          forceSSL = cfg.forceSSLRoot;
-          sslCertificate = if value.sslCertificateRoot != null
-                           then value.sslCertificateRoot
-                           else "/var/lib/acme/default/fullchain.pem";
-          sslCertificateKey = if value.sslCertificateKey != null
-                              then value.sslCertificateKey
-                              else "/var/lib/acme/default/key.pem";
-          sslTrustedCertificate = if value.sslTrustedCertificate != null
-                                  then value.sslTrustedCertificate
-                                  else "/var/lib/acme/default/full.pem";
-        };
         default = {
-          serverName = "default";
+          serverName = cfg.rootDomain;
           root = let
             names = attrNames withIps;
             listItems = map (name: "<li><a href=\"//${name}\">${name}</a></li>\n") names;
@@ -170,8 +165,10 @@ in {
               ${str}
             </ul>
           '')}/home/";
+
           enableACME = cfg.enableACMERoot;
           forceSSL = cfg.forceSSLRoot;
+
           sslCertificate = if value.sslCertificateRoot != null
                            then value.sslCertificateRoot
                            else "/var/lib/acme/default/fullchain.pem";
