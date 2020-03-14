@@ -31,26 +31,41 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
+        description = "Enable proxycontainers";
       };
       rootDomain = mkOption {
         type = types.str;
+        description =
+          ''
+          Root domain for the host. Navigating to this domain will display a list
+          of available sites hosted inside the host.
+          '';
+        example = "example.com";
       };
       containers = mkOption {
         type = types.attrsOf (types.submodule {
           options = {
             ip = mkOption {
               type = types.str;
+              description =
+                ''
+                Private network IP for the container.
+                This will be automatically allocation if not provided.
+                '';
             };
             port = mkOption {
+              description = "Port inside the container that external traffic will be forwarded to";
               type = types.str;
               default = "80";
             };
             config = mkOption {
+              description = "Nix configuration for the container";
               # type = types.attrs; # TODO validate configs as submodules
               default = {};
             };
           };
         });
+        description = "Container definitions for containers hosted on the target machine";
         default = {};
       };
     };
@@ -81,6 +96,11 @@ in {
             <ul>
               ${str}
             </ul>
+            <footer>Powered By:
+              <a href="https://github.com/kylesferrazza/proxycontainers">
+                ProxyContainers
+              </a>
+            </footer>
           '')}/home/";
           enableACME = true;
           forceSSL = true;
